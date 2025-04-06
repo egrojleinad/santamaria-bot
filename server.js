@@ -1,4 +1,4 @@
-// Santamaría Bot - Submenús + Temporizadores + Contenido completo
+// Santamaría Bot - Submenús + Temporizadores + Contenido completo (con corrección de texto multilínea)
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -11,18 +11,18 @@ app.use(bodyParser.urlencoded({ extended: false }));
 const clients = {};
 
 const showMainMenu = () => (
-  '👋 ¿Cómo podemos ayudarte hoy?
+  `👋 ¿Cómo podemos ayudarte hoy?
 
 Opciones:
 1: Admisiones
 2: Gestiones Académicas
 3: Gestiones Administrativas
 4: Capellanía
-9: Terminar sesión'
+9: Terminar sesión`
 );
 
 const admisionesMenu = () => (
-  '🟣 Admisiones:
+  `🟣 Admisiones:
 1.0 Información general
 1.1 Inicial
 1.2 Primaria
@@ -31,30 +31,30 @@ const admisionesMenu = () => (
 1.5 Solicitar visita guiada
 1.6 Iniciar proceso de admisión
 1.7 Conversar con asesora
-1.8 Volver al Menú'
+1.8 Volver al Menú`
 );
 
 const academicoMenu = () => (
-  '📘 Gestiones Académicas:
+  `📘 Gestiones Académicas:
 2.0 Solicitud de documentos
 2.1 Horarios de clase
 2.2 Información específica
 2.3 Dirección
 2.4 Coordinación académica
-2.5 Volver al Menú'
+2.5 Volver al Menú`
 );
 
 const administrativoMenu = () => (
-  '📙 Gestiones Administrativas:
+  `📙 Gestiones Administrativas:
 3.0 Cuentas, bancos, proveedores
 3.1 Bolsa de trabajo
-3.2 Volver al Menú'
+3.2 Volver al Menú`
 );
 
 const capellaniaMenu = () => (
-  '⛪ Capellanía:
+  `⛪ Capellanía:
 4.0 Misas y ceremonias
-4.1 Volver al Menú'
+4.1 Volver al Menú`
 );
 
 const returnToMainMenu = (client, twiml) => {
