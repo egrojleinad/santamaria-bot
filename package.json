@@ -1,32 +1,17 @@
 {
-  "name": "santamaria-whatsapp-bot",
+  "name": "santamaria-bot",
   "version": "1.0.0",
-  "description": "Bot de atención por WhatsApp para el colegio Santa María usando Baileys y Node.js",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node server.js"
   },
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "baileys",
-    "santamaria",
-    "nodejs",
-    "educacion",
-    "admision"
-  ],
-  "author": "Tu Nombre",
-  "license": "MIT",
   "dependencies": {
-    "@hapi/boom": "^12.0.0",
-    "@whiskeysockets/baileys": "^6.7.1",
-    "nodemailer": "^6.9.8"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "engines": {
-    "node": ">=16.0.0"
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "twilio": "^3.84.0"
   }
+
+  "keywords": [santamariabot],
+  "author": "egroj leinad",
+  "license": "ISC"
 }
