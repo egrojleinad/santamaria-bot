@@ -6,8 +6,8 @@ const twilio = require('twilio');
 const app = express();
 const port = 4040;
 
-const accountSid = 'YOUR_ACCOUNT_SID';
-const authToken = 'YOUR_AUTH_TOKEN';
+const accountSid = 'ACUS998343800f383f77f032efb3db09c3a3';
+const authToken = '4364b3646a04b48af666cf54f0ff011b';
 const twilioClient = twilio(accountSid, authToken);
 
 app.use(bodyParser.urlencoded({ extended: false }));
