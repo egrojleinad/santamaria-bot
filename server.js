@@ -1,4 +1,4 @@
-// Santamaría Bot - Submenús + Temporizadores + Corrección de flujo
+// Santamaría Bot - Submenús + Temporizadores + Contenido completo (correlativo)
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -35,7 +35,7 @@ const admisionesMenu = () => (
 );
 
 const academicoMenu = () => (
-  `📘 Gestiones Académicas:
+  `📓 Gestiones Académicas:
 1: Solicitud de documentos
 2: Horarios de clase
 3: Información específica
@@ -45,7 +45,7 @@ const academicoMenu = () => (
 );
 
 const administrativoMenu = () => (
-  `📙 Gestiones Administrativas:
+  `📃 Gestiones Administrativas:
 1: Cuentas, bancos, proveedores
 2: Bolsa de trabajo
 3: Volver al Menú`
@@ -62,8 +62,9 @@ const returnToMainMenu = (client, twiml) => {
   twiml.message(showMainMenu());
 };
 
-const setInactivityTimer = (from, client) => {
+const setTimers = (from, client, twiml) => {
   if (client.inactivityTimer) clearTimeout(client.inactivityTimer);
+  if (client.menuTimer) clearTimeout(client.menuTimer);
 
   client.inactivityTimer = setTimeout(() => {
     delete clients[from];
@@ -80,14 +81,23 @@ app.post('/webhook', (req, res) => {
     clients[from] = { step: 'menu' };
     twiml.message('👋 ¡Hola! Soy SantaMaría, tu asistente virtual.');
     twiml.message(showMainMenu());
-    setInactivityTimer(from, clients[from]);
+    setTimers(from, clients[from], twiml);
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
     return;
   }
 
   const client = clients[from];
-  setInactivityTimer(from, client);
+  setTimers(from, client, twiml);
+
+  const delayedReply = (msg1, menu) => {
+    twiml.message(msg1);
+    setTimeout(() => {
+      twiml.message(menu);
+      res.writeHead(200, { 'Content-Type': 'text/xml' });
+      res.end(twiml.toString());
+    }, 3000);
+  };
 
   switch (client.step) {
     case 'menu':
@@ -114,18 +124,14 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_1':
       switch (msg) {
-        case '1': twiml.message('📄 Puede descargar aquí el brochure informativo: https://shorturl.at/5TfA2'); break;
-        case '2': twiml.message('📄 Inicial: https://shorturl.at/3RH23'); break;
-        case '3': twiml.message('📄 Primaria: https://shorturl.at/C3prm'); break;
-        case '4': twiml.message('📄 Secundaria: https://shorturl.at/oLXVf'); break;
-        case '5': twiml.message('🌐 Proceso de admisión: https://santamariachincha.edu.pe/admision/'); break;
+        case '1': delayedReply('📄 Puede descargar aquí el brochure informativo: https://shorturl.at/5TfA2', admisionesMenu()); return;
+        case '2': delayedReply('📄 Inicial: https://shorturl.at/3RH23', admisionesMenu()); return;
+        case '3': delayedReply('📄 Primaria: https://shorturl.at/C3prm', admisionesMenu()); return;
+        case '4': delayedReply('📄 Secundaria: https://shorturl.at/oLXVf', admisionesMenu()); return;
+        case '5': delayedReply('🌐 Proceso de admisión: https://santamariachincha.edu.pe/admision/', admisionesMenu()); return;
         case '6':
-        case '8':
-          twiml.message('🧑‍💼 Te conectaremos con una asesora de Admisión. Si no recibís respuesta pronto, llamá al 920 411 270');
-          break;
-        case '7':
-          twiml.message('📝 Registrate aquí para iniciar el proceso: https://colegiosantamaria.sieweb.com.pe/admision/#/inscripcion');
-          break;
+        case '8': delayedReply('🧑‍💼 Te conectaremos con una asesora de Admisión. Si no recibís respuesta pronto, llamá al 920 411 270', admisionesMenu()); return;
+        case '7': delayedReply('📝 Registrate aquí para iniciar el proceso: https://colegiosantamaria.sieweb.com.pe/admision/#/inscripcion', admisionesMenu()); return;
         case '9': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Admisiones.');
@@ -135,21 +141,11 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_2':
       switch (msg) {
-        case '1':
-          twiml.message('📨 Escriba su solicitud a info@santamariachincha.edu.pe con asunto: "Solicitud de documentos"');
-          break;
-        case '2':
-          twiml.message('📅 Horarios de clase: https://santamariachincha.edu.pe/');
-          break;
-        case '3':
-          twiml.message('ℹ️ Escriba a acastilla@santamariachincha.edu.pe con asunto: "Consultas"');
-          break;
-        case '4':
-          twiml.message('🎓 Dirección general: mmoron@santamariachincha.edu.pe');
-          break;
-        case '5':
-          twiml.message('📚 Coordinación académica: whurtado@santamariachincha.edu.pe');
-          break;
+        case '1': delayedReply('📨 Escriba su solicitud a info@santamariachincha.edu.pe con asunto: "Solicitud de documentos"', academicoMenu()); return;
+        case '2': delayedReply('📅 Horarios de clase: https://santamariachincha.edu.pe/', academicoMenu()); return;
+        case '3': delayedReply('ℹ️ Escriba a acastilla@santamariachincha.edu.pe con asunto: "Consultas"', academicoMenu()); return;
+        case '4': delayedReply('🎓 Dirección general: mmoron@santamariachincha.edu.pe', academicoMenu()); return;
+        case '5': delayedReply('📚 Coordinación académica: whurtado@santamariachincha.edu.pe', academicoMenu()); return;
         case '6': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Académicas.');
@@ -159,12 +155,8 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_3':
       switch (msg) {
-        case '1':
-          twiml.message('📧 Escriba a ovaldivia@santamariachincha.edu.pe para consultas administrativas');
-          break;
-        case '2':
-          twiml.message('📩 Envíe su CV a postula@santamaria.edu.pe con el área o rol en el asunto');
-          break;
+        case '1': delayedReply('📧 Escriba a ovaldivia@santamariachincha.edu.pe para consultas administrativas', administrativoMenu()); return;
+        case '2': delayedReply('📬 Envíe su CV a postula@santamaria.edu.pe con el área o rol en el asunto', administrativoMenu()); return;
         case '3': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Administrativas.');
@@ -174,9 +166,7 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_4':
       switch (msg) {
-        case '1':
-          twiml.message('🙏 Información sobre misas: https://wa.link/09hexw');
-          break;
+        case '1': delayedReply('🙏 Información sobre misas: https://wa.link/09hexw', capellaniaMenu()); return;
         case '2': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Capellanía.');
