@@ -84,12 +84,7 @@ app.post('/webhook', (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
     return;
-  };
-    twiml.message('👋 ¡Hola! Soy SantaMaría, tu asistente virtual.');
-    twiml.message(showMainMenu());
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
-    return;
+  
   }
 
   const client = clients[from];
