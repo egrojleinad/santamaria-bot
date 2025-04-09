@@ -6,8 +6,10 @@ const twilio = require('twilio');
 const app = express();
 const port = 4040;
 
-const accountSid = 'ACUS998343800f383f77f032efb3db09c3a3';
-const authToken = '4364b3646a04b48af666cf54f0ff011b';
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER;
+const notifyTo = 'whatsapp:+50672297263';
 const twilioClient = twilio(accountSid, authToken);
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -68,9 +70,7 @@ const returnToMainMenu = (client, twiml) => {
 
 const delayMessage = (twiml, message, menuFn) => {
   twiml.message(message);
-  setTimeout(() => {
-    twiml.message(menuFn());
-  }, 3000);
+  twiml.message(menuFn());
 };
 
 app.post('/webhook', (req, res) => {
@@ -84,7 +84,6 @@ app.post('/webhook', (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
     return;
-  
   }
 
   const client = clients[from];
@@ -131,34 +130,22 @@ app.post('/webhook', (req, res) => {
         case '5': delayMessage(twiml, '🌐 Proceso de admisión: https://santamariachincha.edu.pe/admision/', admisionesMenu); break;
         case '6':
           twiml.message('✅ Hemos registrado tu solicitud para una visita guiada. Pronto te contactaremos.');
-          const nodemailer = require('nodemailer');
-          const transporter = nodemailer.createTransport({
-            host: 'smtp.office365.com',
-            port: 587,
-            secure: false,
-            auth: {
-              user: 'jcolmenares@santamariachincha.edu.pe',
-              pass: 'TotusTuus2019'
-            }
+          twilioClient.messages.create({
+            body: `📌 Una persona solicita una visita guiada\nNombre: ${client.name || 'No especificado'}\nWhatsApp: ${from}`,
+            from: whatsappFrom,
+            to: notifyTo
           });
-
-          const mailOptions = {
-            from: 'jcolmenares@santamariachincha.edu.pe',
-            to: 'acastilla@santamariachincha.edu.pe',
-            subject: 'Solicitud de Visita Guiada',
-            text: `Nombre: ${client.name || 'No especificado'}
-WhatsApp: ${from}`
-          };
-
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.error('Error al enviar correo:', error);
-            } else {
-              console.log('Correo enviado:', info.response);
-            }
-          });
+          twiml.message(admisionesMenu());
           break;
         case '7': delayMessage(twiml, '📝 Registrate aquí: https://colegiosantamaria.sieweb.com.pe/admision/#/inscripcion', admisionesMenu); break;
+        case '8':
+          delayMessage(twiml, '📨 Te pondremos en contacto con una asesora.', admisionesMenu);
+          twilioClient.messages.create({
+            body: `📌 Tenemos una persona que solicita atención personal en WhatsApp.\nNombre: ${client.name || 'No especificado'}\nNúmero: ${from}`,
+            from: whatsappFrom,
+            to: notifyTo
+          });
+          break;
         case '9': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Admisiones.');
