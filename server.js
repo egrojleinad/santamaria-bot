@@ -25,7 +25,7 @@ Opciones:
 2: Gestiones Académicas
 3: Gestiones Administrativas
 4: Capellanía
-9: Terminar sesión
+5: Terminar sesión
 
 📝 En cualquier momento, escribe 0 para volver al Menú Principal.`
 );
@@ -130,7 +130,7 @@ app.post('/webhook', (req, res) => {
       } else if (msg === '4') {
         client.step = 'submenu_4';
         twiml.message(capellaniaMenu());
-      } else if (msg === '9') {
+      } else if (msg === '5') {
         delete clients[from];
         twiml.message('👋 ¡Gracias por tu visita! Esperamos haberte ayudado. Visita nuestra web para más información: www.santamariachincha.edu.pe');
       } else {
@@ -141,7 +141,7 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_1':
       switch (msg) {
-        case '1': delayMessage(twiml, '📄 Puede descargar aquí el brochure informativo para tener toda lo necesario sobre las Admisiones: https://shorturl.at/5TfA2', admisionesMenu); break;
+        case '1': delayMessage(twiml, '📄 Puede descargar aquí el brochure informativo para tener todo lo necesario sobre las Admisiones: https://shorturl.at/5TfA2', admisionesMenu); break;
         case '2': delayMessage(twiml, '📄 Descarga aquí el Folleto de Inicial: https://shorturl.at/3RH23', admisionesMenu); break;
         case '3': delayMessage(twiml, '📄 Descarga aquí el Folleto de Primaria: https://shorturl.at/C3prm', admisionesMenu); break;
         case '4': delayMessage(twiml, '📄 Descarga aquí el Folleto de Secundaria: https://shorturl.at/oLXVf', admisionesMenu); break;
@@ -198,7 +198,7 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_4':
       switch (msg) {
-        case '1': delayMessage(twiml, '🙏 Comunícate con el diácono Bernardo y pide Información sobre misas o sacramentos: https://wa.link/09hexw', capellaniaMenu); break;
+        case '1': delayMessage(twiml, '🙏 Comunícate con el diácono Bernardo y pide Información sobre misas o sacramentos haciendo click aquí: https://wa.link/09hexw', capellaniaMenu); break;
         case '2': returnToMainMenu(client, twiml); break;
         default:
           twiml.message('❗ Opción inválida en Capellanía.');
