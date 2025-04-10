@@ -141,11 +141,11 @@ app.post('/webhook', (req, res) => {
 
     case 'submenu_1':
       switch (msg) {
-        case '1': delayMessage(twiml, '📄 Puede descargar aquí el brochure informativo: https://shorturl.at/5TfA2', admisionesMenu); break;
-        case '2': delayMessage(twiml, '📄 Folleto de Inicial: https://shorturl.at/3RH23', admisionesMenu); break;
-        case '3': delayMessage(twiml, '📄 Folleto de Primaria: https://shorturl.at/C3prm', admisionesMenu); break;
-        case '4': delayMessage(twiml, '📄 Folleto de Secundaria: https://shorturl.at/oLXVf', admisionesMenu); break;
-        case '5': delayMessage(twiml, '🌐 Conoce el Proceso de admisión: https://santamariachincha.edu.pe/admision/', admisionesMenu); break;
+        case '1': delayMessage(twiml, '📄 Puede descargar aquí el brochure informativo para tener toda lo necesario sobre las Admisiones: https://shorturl.at/5TfA2', admisionesMenu); break;
+        case '2': delayMessage(twiml, '📄 Descarga aquí el Folleto de Inicial: https://shorturl.at/3RH23', admisionesMenu); break;
+        case '3': delayMessage(twiml, '📄 Descarga aquí el Folleto de Primaria: https://shorturl.at/C3prm', admisionesMenu); break;
+        case '4': delayMessage(twiml, '📄 Descarga aquí el Folleto de Secundaria: https://shorturl.at/oLXVf', admisionesMenu); break;
+        case '5': delayMessage(twiml, '🌐 Conoce el Proceso de admisión en esta sección de nuestra web: https://santamariachincha.edu.pe/admision/', admisionesMenu); break;
         case '6':
           twiml.message('✅ Hemos registrado tu solicitud para una visita guiada. Pronto te contactaremos.');
           twilioClient.messages.create({
