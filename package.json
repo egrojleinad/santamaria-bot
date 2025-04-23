@@ -1,22 +1,16 @@
 {
-  "name": "tuspacio-salon-bot",
+  "name": "santamaria-bot",
   "version": "1.0.0",
-  "description": "WhatsApp bot para TuSpacio Salon usando Twilio",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "twilio": "^4.15.2"
+    "body-parser": "^1.20.2",
+    "twilio": "^3.84.0"
   },
-  "devDependencies": {
-    "nodemon": "^2.0.22"
-  },
-  "keywords": [],
-  "author": "ZAPIKEY AI",
-  "license": "MIT"
+  "keywords": ["santamariabot"],
+  "author": "egroj leinad",
+  "license": "ISC"
 }
