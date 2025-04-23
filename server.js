@@ -1,3 +1,5 @@
+// Bot WhatsApp Colegio Santa María de Chincha - Código Final Integrado
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const twilio = require('twilio');
@@ -78,8 +80,9 @@ app.post('/webhook', (req, res) => {
     client.name = msg;
     client.step = MENUS.MAIN;
     client.awaiting = false;
-    twiml.message(`¡Gracias, ${client.name}!`);
-    twiml.message(showMainMenu());
+    const bienvenida = `¡Gracias, ${client.name}!`;
+    const menu = showMainMenu();
+    twiml.message(`${bienvenida}\n\n${menu}`);
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     return res.end(twiml.toString());
   }
