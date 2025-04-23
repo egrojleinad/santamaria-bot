@@ -112,6 +112,20 @@ app.post('/webhook', (req, res) => {
     return res.end(twiml.toString());
   }
 
+  if (client.step === MENUS.MAIN) {
+    switch (msg) {
+      case '1': client.step = MENUS.ADMISIONES; break;
+      case '2': client.step = MENUS.ACADEMICO; break;
+      case '3': client.step = MENUS.ADMINISTRATIVO; break;
+      case '4': client.step = MENUS.CAPELLANIA; break;
+      default:
+        twiml.message('❗ La opción ingresada no es válida. Por favor, seleccione una opción del menú.');
+        twiml.message(showMainMenu());
+        res.writeHead(200, { 'Content-Type': 'text/xml' });
+        return res.end(twiml.toString());
+    }
+  }
+
   switch (client.step) {
     case MENUS.ADMISIONES:
       switch (msg) {
