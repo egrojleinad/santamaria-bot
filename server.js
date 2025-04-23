@@ -1,5 +1,3 @@
-// Bot WhatsApp Colegio Santa María de Chincha - Código Final Integrado
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const twilio = require('twilio');
@@ -23,6 +21,7 @@ const MENUS = {
   ACADEMICO: 'submenu_2',
   ADMINISTRATIVO: 'submenu_3',
   CAPELLANIA: 'submenu_4',
+  ESPERA_MENSAJE: 'espera_mensaje'
 };
 
 const showMainMenu = () => (
@@ -34,6 +33,18 @@ const showMainMenu = () => (
   `0: Terminar sesión`
 );
 
+const getFechaHoraLocal = () => {
+  const fecha = new Date().toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
+  const hora = new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' });
+  return { fecha, hora };
+};
+
+const enviarNotificacionDetallada = (client, from, menu, subopcion, mensajeEspecifico = '') => {
+  const { fecha, hora } = getFechaHoraLocal();
+  const texto = `📌 NUEVA SOLICITUD\nFecha: ${fecha}\nHora: ${hora}\nNombre: ${client.name || 'No registrado'}\nWhatsApp: ${from}\nMenú: ${menu} > ${subopcion}\nMensaje: ${mensajeEspecifico}`;
+  twilioClient.messages.create({ from: whatsappFrom, to: notifyTo, body: texto });
+};
+
 const setInactivityTimeout = (from, name = '') => {
   clearTimeout(activityTimeouts[from]);
   activityTimeouts[from] = setTimeout(() => {
@@ -44,14 +55,6 @@ const setInactivityTimeout = (from, name = '') => {
       body: `⌛ La sesión ha finalizado por inactividad. Muchas gracias, ${name || 'estimado usuario'}, por su interés en el Colegio Santa María. Quedamos atentos a cualquier futura consulta.`
     });
   }, 120000);
-};
-
-const notify = (asunto, client, from) => {
-  twilioClient.messages.create({
-    body: `📌 ${asunto}\nNombre: ${client.name || 'No registrado'}\nWhatsApp: ${from}\nFecha: ${new Date().toLocaleDateString('es-PE')}\nHora: ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`,
-    from: whatsappFrom,
-    to: notifyTo
-  });
 };
 
 const exitSession = (client, from, twiml) => {
@@ -80,9 +83,16 @@ app.post('/webhook', (req, res) => {
     client.name = msg;
     client.step = MENUS.MAIN;
     client.awaiting = false;
-    const bienvenida = `¡Gracias, ${client.name}!`;
-    const menu = showMainMenu();
-    twiml.message(`${bienvenida}\n\n${menu}`);
+    twiml.message(`¡Gracias, ${client.name}!\n\n${showMainMenu()}`);
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    return res.end(twiml.toString());
+  }
+
+  if (client.step === MENUS.ESPERA_MENSAJE && client.pendienteMenu && client.pendienteSubmenu) {
+    enviarNotificacionDetallada(client, from, client.pendienteMenu, client.pendienteSubmenu, msg);
+    twiml.message('✅ Hemos recibido su mensaje y se ha derivado al área correspondiente.');
+    client.step = MENUS.MAIN;
+    twiml.message(showMainMenu());
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     return res.end(twiml.toString());
   }
@@ -103,61 +113,65 @@ app.post('/webhook', (req, res) => {
   }
 
   switch (client.step) {
-    case MENUS.MAIN:
-      switch (msg) {
-        case '1': client.step = MENUS.ADMISIONES; twiml.message(`🔸 Admisiones:\n1: Información general\n2: Inicial\n3: Primaria\n4: Secundaria\n5: Proceso de admisión\n6: Solicitar visita guiada\n7: Iniciar proceso de admisión\n8: Conversar con asesora\n0: Terminar sesión`); break;
-        case '2': client.step = MENUS.ACADEMICO; twiml.message(`📓 Gestiones Académicas:\n1: Solicitud de documentos\n2: Horarios de clase\n3: Información específica\n4: Dirección\n5: Coordinación académica\n0: Terminar sesión`); break;
-        case '3': client.step = MENUS.ADMINISTRATIVO; twiml.message(`📃 Gestiones Administrativas:\n1: Cuentas, bancos, proveedores\n2: Bolsa de trabajo\n3: Conversar con Secretaría\n0: Terminar sesión`); break;
-        case '4': client.step = MENUS.CAPELLANIA; twiml.message(`⛪ Capellanía:\n1: Misas y ceremonias\n2: Conversar con la Capellanía\n0: Terminar sesión`); break;
-        default:
-          twiml.message('❗ La opción ingresada no es válida. Por favor, seleccione una opción del menú.');
-          twiml.message(showMainMenu());
-      }
-      break;
-
     case MENUS.ADMISIONES:
       switch (msg) {
-        case '1': twiml.message('📄 Puede descargar el brochure informativo desde: https://shorturl.at/5TfA2'); client.awaiting = true; break;
-        case '2': twiml.message('📄 Brochure del nivel Inicial: https://shorturl.at/3RH23'); client.awaiting = true; break;
-        case '3': twiml.message('📄 Brochure del nivel Primaria: https://shorturl.at/C3prm'); client.awaiting = true; break;
-        case '4': twiml.message('📄 Brochure del nivel Secundaria: https://shorturl.at/oLXVf'); client.awaiting = true; break;
-        case '5': twiml.message('🌐 Proceso de admisión: https://santamariachincha.edu.pe/admision/'); client.awaiting = true; break;
-        case '6': twiml.message('✅ Hemos registrado su solicitud para una visita guiada. Pronto nos comunicaremos.'); notify('Solicitud de visita guiada', client, from); client.awaiting = true; break;
-        case '7': twiml.message('📝 Puede inscribirse aquí: https://colegiosantamaria.sieweb.com.pe/admision/#/inscripcion'); client.awaiting = true; break;
-        case '8': twiml.message('📨 Lo derivaremos con una asesora de admisión.'); notify('Solicitud de atención personal con asesora de admisión', client, from); client.awaiting = true; break;
-        case '0': exitSession(client, from, twiml); break;
-        default: twiml.message('❗ La opción ingresada no es válida.'); break;
+        case '6':
+          client.step = MENUS.ESPERA_MENSAJE;
+          client.pendienteMenu = 'Admisiones';
+          client.pendienteSubmenu = 'Solicitar visita guiada';
+          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+          break;
+        case '8':
+          client.step = MENUS.ESPERA_MENSAJE;
+          client.pendienteMenu = 'Admisiones';
+          client.pendienteSubmenu = 'Conversar con asesora';
+          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+          break;
+        default:
+          client.awaiting = true;
+          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
       }
       break;
 
     case MENUS.ACADEMICO:
       switch (msg) {
-        case '1': twiml.message('📬 Solicite documentos a info@santamariachincha.edu.pe con el asunto correspondiente.'); client.awaiting = true; break;
-        case '2': twiml.message('📅 Horarios disponibles en: https://santamariachincha.edu.pe/'); client.awaiting = true; break;
-        case '3': twiml.message('ℹ️ Derivaremos su solicitud al área correspondiente.'); notify('Solicitud de información académica', client, from); client.awaiting = true; break;
-        case '4': twiml.message('🎓 Dirección General: mmoron@santamariachincha.edu.pe'); client.awaiting = true; break;
-        case '5': twiml.message('📚 Coordinación Académica: whurtado@santamariachincha.edu.pe'); client.awaiting = true; break;
-        case '0': exitSession(client, from, twiml); break;
-        default: twiml.message('❗ La opción ingresada no es válida.'); break;
+        case '3':
+          client.step = MENUS.ESPERA_MENSAJE;
+          client.pendienteMenu = 'Académico';
+          client.pendienteSubmenu = 'Información específica';
+          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+          break;
+        default:
+          client.awaiting = true;
+          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
       }
       break;
 
     case MENUS.ADMINISTRATIVO:
       switch (msg) {
-        case '1': twiml.message('📧 Consultas administrativas: ovaldivia@santamariachincha.edu.pe'); client.awaiting = true; break;
-        case '2': twiml.message('📩 Envíe su CV a postula@santamaria.edu.pe con el cargo en el asunto.'); client.awaiting = true; break;
-        case '3': twiml.message('📨 Lo pondremos en contacto con la Secretaría.'); notify('Solicitud de contacto con Secretaría', client, from); client.awaiting = true; break;
-        case '0': exitSession(client, from, twiml); break;
-        default: twiml.message('❗ La opción ingresada no es válida.'); break;
+        case '3':
+          client.step = MENUS.ESPERA_MENSAJE;
+          client.pendienteMenu = 'Administrativo';
+          client.pendienteSubmenu = 'Conversar con Secretaría';
+          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+          break;
+        default:
+          client.awaiting = true;
+          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
       }
       break;
 
     case MENUS.CAPELLANIA:
       switch (msg) {
-        case '1': twiml.message('🙏 Horarios de misas: https://wa.link/09hexw'); client.awaiting = true; break;
-        case '2': twiml.message('📨 Derivaremos su consulta al área de Capellanía.'); notify('Solicitud de contacto con Capellanía', client, from); client.awaiting = true; break;
-        case '0': exitSession(client, from, twiml); break;
-        default: twiml.message('❗ La opción ingresada no es válida.'); break;
+        case '2':
+          client.step = MENUS.ESPERA_MENSAJE;
+          client.pendienteMenu = 'Capellanía';
+          client.pendienteSubmenu = 'Conversar con la Capellanía';
+          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+          break;
+        default:
+          client.awaiting = true;
+          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
       }
       break;
 
