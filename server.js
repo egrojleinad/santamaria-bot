@@ -33,6 +33,21 @@ const showMainMenu = () => (
   `0: Terminar sesión`
 );
 
+const showSubMenu = (menu) => {
+  switch (menu) {
+    case MENUS.ADMISIONES:
+      return `🔸 Admisiones:\n6: Solicitar visita guiada\n8: Conversar con asesora`;
+    case MENUS.ACADEMICO:
+      return `📘 Académico:\n3: Información específica`;
+    case MENUS.ADMINISTRATIVO:
+      return `📋 Administrativo:\n3: Conversar con Secretaría`;
+    case MENUS.CAPELLANIA:
+      return `⛪ Capellanía:\n2: Conversar con la Capellanía`;
+    default:
+      return '';
+  }
+};
+
 const getFechaHoraLocal = () => {
   const fecha = new Date().toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
   const hora = new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' });
@@ -52,7 +67,7 @@ const setInactivityTimeout = (from, name = '') => {
     twilioClient.messages.create({
       from: whatsappFrom,
       to: from,
-      body: `⌛ La sesión ha finalizado por inactividad. Muchas gracias, ${name || 'estimado usuario'}, por su interés en el Colegio Santa María. Quedamos atentos a cualquier futura consulta.`
+      body: `⌛ La sesión ha finalizado por inactividad. Muchas gracias, ${name || 'estimado usuario'}, por su interés en el Colegio Santa María.`
     });
   }, 120000);
 };
@@ -88,19 +103,36 @@ app.post('/webhook', (req, res) => {
     return res.end(twiml.toString());
   }
 
-  if (client.step === MENUS.ESPERA_MENSAJE && client.pendienteMenu && client.pendienteSubmenu) {
-    enviarNotificacionDetallada(client, from, client.pendienteMenu, client.pendienteSubmenu, msg);
-    twiml.message('✅ Hemos recibido su mensaje y se ha derivado al área correspondiente.');
-    client.step = MENUS.MAIN;
-    twiml.message(showMainMenu());
+  if (client.step === MENUS.MAIN) {
+    switch (msg) {
+      case '1':
+        client.step = MENUS.ADMISIONES;
+        twiml.message(showSubMenu(MENUS.ADMISIONES));
+        break;
+      case '2':
+        client.step = MENUS.ACADEMICO;
+        twiml.message(showSubMenu(MENUS.ACADEMICO));
+        break;
+      case '3':
+        client.step = MENUS.ADMINISTRATIVO;
+        twiml.message(showSubMenu(MENUS.ADMINISTRATIVO));
+        break;
+      case '4':
+        client.step = MENUS.CAPELLANIA;
+        twiml.message(showSubMenu(MENUS.CAPELLANIA));
+        break;
+      default:
+        twiml.message('❗ La opción ingresada no es válida. Por favor, seleccione una opción del menú.');
+        twiml.message(showMainMenu());
+    }
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     return res.end(twiml.toString());
   }
 
-  if (client.awaiting) {
+  if (client.step === MENUS.ESPERA_MENSAJE && client.pendienteMenu && client.pendienteSubmenu) {
+    enviarNotificacionDetallada(client, from, client.pendienteMenu, client.pendienteSubmenu, msg);
+    twiml.message('✅ Hemos recibido su mensaje y se ha derivado al área correspondiente.');
     client.step = MENUS.MAIN;
-    client.awaiting = false;
-    twiml.message('🔁 Gracias por su mensaje. Le presento nuevamente el menú principal para continuar.');
     twiml.message(showMainMenu());
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     return res.end(twiml.toString());
@@ -112,81 +144,34 @@ app.post('/webhook', (req, res) => {
     return res.end(twiml.toString());
   }
 
-  if (client.step === MENUS.MAIN) {
-    switch (msg) {
-      case '1': client.step = MENUS.ADMISIONES; break;
-      case '2': client.step = MENUS.ACADEMICO; break;
-      case '3': client.step = MENUS.ADMINISTRATIVO; break;
-      case '4': client.step = MENUS.CAPELLANIA; break;
-      default:
-        twiml.message('❗ La opción ingresada no es válida. Por favor, seleccione una opción del menú.');
-        twiml.message(showMainMenu());
-        res.writeHead(200, { 'Content-Type': 'text/xml' });
-        return res.end(twiml.toString());
-    }
-  }
+  // Submenús activos con opciones especiales
+  const redirigirConMensaje = (menu, subopcion) => {
+    client.step = MENUS.ESPERA_MENSAJE;
+    client.pendienteMenu = menu;
+    client.pendienteSubmenu = subopcion;
+    twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
+  };
 
   switch (client.step) {
     case MENUS.ADMISIONES:
-      switch (msg) {
-        case '6':
-          client.step = MENUS.ESPERA_MENSAJE;
-          client.pendienteMenu = 'Admisiones';
-          client.pendienteSubmenu = 'Solicitar visita guiada';
-          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
-          break;
-        case '8':
-          client.step = MENUS.ESPERA_MENSAJE;
-          client.pendienteMenu = 'Admisiones';
-          client.pendienteSubmenu = 'Conversar con asesora';
-          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
-          break;
-        default:
-          client.awaiting = true;
-          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
-      }
+      if (msg === '6') redirigirConMensaje('Admisiones', 'Solicitar visita guiada');
+      else if (msg === '8') redirigirConMensaje('Admisiones', 'Conversar con asesora');
+      else twiml.message('❗ Opción no válida en Admisiones.');
       break;
 
     case MENUS.ACADEMICO:
-      switch (msg) {
-        case '3':
-          client.step = MENUS.ESPERA_MENSAJE;
-          client.pendienteMenu = 'Académico';
-          client.pendienteSubmenu = 'Información específica';
-          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
-          break;
-        default:
-          client.awaiting = true;
-          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
-      }
+      if (msg === '3') redirigirConMensaje('Académico', 'Información específica');
+      else twiml.message('❗ Opción no válida en Académico.');
       break;
 
     case MENUS.ADMINISTRATIVO:
-      switch (msg) {
-        case '3':
-          client.step = MENUS.ESPERA_MENSAJE;
-          client.pendienteMenu = 'Administrativo';
-          client.pendienteSubmenu = 'Conversar con Secretaría';
-          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
-          break;
-        default:
-          client.awaiting = true;
-          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
-      }
+      if (msg === '3') redirigirConMensaje('Administrativo', 'Conversar con Secretaría');
+      else twiml.message('❗ Opción no válida en Administrativo.');
       break;
 
     case MENUS.CAPELLANIA:
-      switch (msg) {
-        case '2':
-          client.step = MENUS.ESPERA_MENSAJE;
-          client.pendienteMenu = 'Capellanía';
-          client.pendienteSubmenu = 'Conversar con la Capellanía';
-          twiml.message('Por favor, escriba el mensaje con su consulta o solicitud:');
-          break;
-        default:
-          client.awaiting = true;
-          twiml.message('Gracias por su interés. Le responderemos a la brevedad.');
-      }
+      if (msg === '2') redirigirConMensaje('Capellanía', 'Conversar con la Capellanía');
+      else twiml.message('❗ Opción no válida en Capellanía.');
       break;
 
     default:
