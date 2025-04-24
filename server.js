@@ -79,10 +79,9 @@ app.post('/webhook', (req, res) => {
   if (client.step === MENUS.ASK_NAME) {
     client.name = msg;
     client.step = MENUS.MAIN;
-    client.awaitingMenu = true;
     twiml.message(`¡Gracias, ${client.name}!\n\n${showMainMenu()}`);
     return res.end(twiml.toString());
-  }
+  }  
 
   if (client.awaitingMenu) {
     client.awaitingMenu = false;
